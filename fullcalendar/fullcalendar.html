@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./lib/main.min.css">
+	<script src="./lib/main.min.js"></script>
+    <script src="./lib/locales-all.min.js"></script>
+    <script src="./moment-2.29.3/moment-with-locales.min.js"></script>
+</head>
+<body>
+
+<h1>FullCalendar V5.11</h1>
+
+<div id='calendar'></div>
+
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            height: 550,
+            locale: 'zh-tw',
+            selectOverlap: false,
+            // headerToolbar: true,
+            allDaySlot: false,
+            slotDuration: '00:30:00',
+            initialView: 'timeGridWeek',
+            slotMinTime: '07:00:00',
+            slotMaxTime: '23:00:00',
+            initialDate: moment().format('YYYY-MM-DD'),
+            eventClick: function (info) {
+                ClickEvent(info);
+            },
+            dateClick: function (info) {
+
+                AddEvent(info);
+
+            },
+			// 建立預設的事件
+            events: [
+			         {"title":"標題",
+			          "start":"2022-05-19 14:00:00",
+					  "end":"2022-05-19 15:00:00",
+					  "editable":false,
+					  "backgroundColor":"#E7E7E7",
+					  "textColor":"black",
+					  "borderColor":"transparent",
+					  "toolTips":"這是tool tips"}
+					],
+            eventContent: function (arg) {
+                /*
+				let spanElement = document.createElement('span');
+
+                spanElement.innerHTML = arg.event.title;
+
+                let arrayOfDomNodes = [spanElement]
+                return { domNodes: arrayOfDomNodes }
+				*/
+            },
+            eventDidMount: function (info) {
+			    /*
+                $(info.el).popover({
+                    title: info.event.extendedProps.toolTips,
+                    placement: 'top',
+                    trigger: 'hover',
+                    // content: '如果想要顯示更多資訊的話可以在這邊用',
+                    container: 'body'
+                });
+				*/
+            },
+            eventOverlap: function (stillEvent, movingEvent) {
+                return stillEvent.allDay && movingEvent.allDay;
+            }
+        });
+        calendar.render();
+
+        // 時段是否小於現在時間
+        function IsLessThenNow(dateCheck) {
+            var datenow = new Date();
+
+            if (datenow > dateCheck) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        // 這個時段是否已經有事件
+        function IsSlotHasEvent(date) {
+            var allEvents = calendar.getEvents();
+            var event = $.grep(allEvents, function (v) {
+                return +v.start === +date;
+            });
+            return event.length > 0;
+        }
+		
+		// 點擊事件
+		function ClickEvent(info) {
+
+		    var result = confirm(`點擊了，${info.event.title}，${moment(info.event.start).format("YYYY/MM/DD HH:mm")}，是否要刪除？`);
+			if(result) {
+			    info.event.remove();
+			}
+		}
+
+        // 加入事件
+        function AddEvent(info) {
+            // 將時間設為整點
+            let date = new Date(info.date.getFullYear(), info.date.getMonth(), info.date.getDate(), info.date.getHours(), 0, 0, 0);
+            var newdate = moment(info.date).format("YYYY/MM/DD");
+            var startTime = moment(date).format("HH:mm");
+            var endTime = moment(date).add(1, 'hours').format("HH:mm");
+            if (IsLessThenNow(date)) {
+                alert("過去時段無法調整");
+                return;
+            }
+
+            let result = IsSlotHasEvent(date);
+            // 如果這個 slot 已經有事件了，就不能再增加 
+            if (result) {
+                return;
+            }
+			
+			calendar.addEvent( 
+			    {   
+				    "title":"標題",
+			        "start": date,
+					"end":moment(date).add(1, 'hours'),
+					"editable":false,
+					"backgroundColor":"#E7E7E7",
+					"textColor":"black",
+					"borderColor":"transparent",
+					"toolTips":"這是tool tips"
+				}
+			)
+			
+        }
+	});
+</script>
+</html> 
